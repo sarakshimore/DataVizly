@@ -91,7 +91,7 @@ cd data-visualization-dashboard
 
 ### 2️⃣ Setup the Backend (FastAPI)
 
-#### 🔹 Navigate to backend directory
+#### Navigate to backend directory
 
 ```bash
 cd backend
@@ -197,7 +197,7 @@ Frontend will run at:
 ## Author
 
 **Sarakshi More**
-🔗 [LinkedIn](https://www.linkedin.com/in/sarakshi-m-158212211/)
-🔗 [GitHub](https://github.com/sarakshimore/)
+[LinkedIn](https://www.linkedin.com/in/sarakshi-m-158212211/)
+[GitHub](https://github.com/sarakshimore/)
 
 ---
