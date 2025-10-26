@@ -1,4 +1,3 @@
-# auth.py (synchronous supabase client - drop in to replace existing file)
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Body
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -17,12 +16,10 @@ import logging
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-
 class UserCreate(BaseModel):
     name: Optional[str] = None
     email: str
     password: str
-
 
 class UserInfo(BaseModel):
     id: str
@@ -30,11 +27,9 @@ class UserInfo(BaseModel):
     email: str
     role: Optional[str] = None
 
-
 class Token(BaseModel):
     access_token: str
     token_type: str
-
 
 class ChangePasswordRequest(BaseModel):
     old_password: str
@@ -45,7 +40,6 @@ class ChangePasswordRequest(BaseModel):
 async def register(user: UserCreate, response: Response):
     logger.debug(f"Register request: {user}")
     try:
-        # synchronous supabase client - do NOT await .execute()
         existing = supabase.table("users").select("email").eq("email", user.email).execute()
         if existing.data:
             raise HTTPException(status_code=400, detail="Email already registered")
@@ -65,7 +59,6 @@ async def register(user: UserCreate, response: Response):
             data={"sub": user_id}, expires_delta=access_token_expires
         )
 
-        # set cookie on provided response object and return dict (response_model will be applied)
         set_token_cookie(response, access_token)
         return {"access_token": access_token, "token_type": "bearer"}
     except HTTPException:
@@ -79,7 +72,6 @@ async def register(user: UserCreate, response: Response):
 async def login(user: UserCreate, response: Response):
     logger.debug(f"Login request: {user}")
     try:
-        # synchronous supabase usage
         db_user = supabase.table("users").select("id, hashed_password").eq("email", user.email).execute()
 
         if not db_user.data or not verify_password(user.password, db_user.data[0]["hashed_password"]):
@@ -109,7 +101,6 @@ async def logout(response: Response):
     response.delete_cookie(key="access_token", path="/")
     return JSONResponse(content={"detail": "Logged out successfully"})
 
-
 @router.get("/me", response_model=UserInfo)
 async def get_me(current_user: dict = Depends(get_current_user)):
     return {
@@ -118,7 +109,6 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         "email": current_user["email"],
         "role": current_user.get("role"),
     }
-
 
 @router.put("/me")
 async def update_me(
@@ -137,7 +127,6 @@ async def update_me(
 
     res = supabase.table("users").update(updates).eq("id", user_id).execute()
 
-    # res.data will be list if successful
     if not res.data or getattr(res, "error", None):
         raise HTTPException(status_code=400, detail="Failed to update user")
 
@@ -149,7 +138,6 @@ async def update_me(
         "role": updated_user.get("role"),
     }
 
-
 @router.post("/change-password")
 async def change_password(request: ChangePasswordRequest, current_user: dict = Depends(get_current_user)):
     user_id = current_user["id"]
@@ -158,7 +146,6 @@ async def change_password(request: ChangePasswordRequest, current_user: dict = D
     if not getattr(user_data, "data", None) or getattr(user_data, "error", None):
         raise HTTPException(status_code=404, detail="User not found")
 
-    # when single() is used, data is a dict
     hashed = user_data.data.get("hashed_password")
     if not verify_password(request.old_password, hashed):
         raise HTTPException(status_code=400, detail="Incorrect current password")
